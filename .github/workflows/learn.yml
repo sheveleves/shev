@@ -2,7 +2,7 @@ name: workflows for learn
 on: workflow_dispatch
 jobs:
   print:
-    runs-on: ubunbu-latest
+    runs-on: ubuntu-latest
     steps:
           - name: Print to console
             run: echo Hello GH Action!
