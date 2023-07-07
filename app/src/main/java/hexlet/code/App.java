@@ -17,7 +17,7 @@ public class App {
     public static Javalin getApp() {
         Javalin app = Javalin.create(config -> {
             config.plugins.enableDevLogging(); })
-                .get("/", ctx -> ctx.result("Hello world"))
+                .get("/", bug)
                 .get("/url/", see)
                 .post("/url/", create);
         return app;
@@ -40,5 +40,10 @@ public class App {
 //                .id.equalTo(1L)
                 .findList();
         ctx.result(urls.toString());
+    };
+
+    private static Handler bug = ctx -> {
+        String env = System.getenv("APP_ENV");
+        ctx.result("HELLO     " + env);
     };
 }
