@@ -12,7 +12,7 @@ datasource:
     password: ""
     url: "jdbc:h2:./database"
   production:
-    username: postgres
-    password: 2gOozFVadzkK7R3ZvWfl
-    url: postgresql://postgres:2gOozFVadzkK7R3ZvWfl@containers-us-west-84.railway.app:6182/railway
+    username: "postgres"
+    password: "2gOozFVadzkK7R3ZvWfl"
+    url: "postgresql://postgres:2gOozFVadzkK7R3ZvWfl@containers-us-west-84.railway.app:6182/railway"
 
