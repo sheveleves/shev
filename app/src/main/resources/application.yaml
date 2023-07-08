@@ -14,5 +14,4 @@ datasource:
   production:
     username: "postgres"
     password: "2gOozFVadzkK7R3ZvWfl"
-    url: "postgresql://postgres:2gOozFVadzkK7R3ZvWfl@containers-us-west-84.railway.app:6182/railway"
-
+    url: "jdbc:postgresql://postgres:2gOozFVadzkK7R3ZvWfl@containers-us-west-84.railway.app:6182/railway"
