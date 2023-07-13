@@ -1,9 +1,12 @@
 ebean:
-#  ddl:
-#    run: true
-#    generate: true
-  migration:
+  ddl:
     run: true
+    generate: true
+#  migration:
+#    run: true
+    
+    
+
 
 datasource:
   default: ${APP_ENV}
@@ -15,3 +18,4 @@ datasource:
     username: ${PGUSER}
     password: ${PGPASSWORD}
     url: ${DATABASE_URL}
+
