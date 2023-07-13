@@ -10,9 +10,9 @@ datasource:
     password: ""
     url: "jdbc:h2:./database"
   production:
-    username: ${{Postgres.PGUSER}}
-    password: ${{Postgres.PGPASSWORD}}
-    url: ${{Postgres.DATABASE_URL}}
+    username: ${PGUSER}
+    password: ${PGPASSWORD}
+    url: ${DATABASE_URL}
 
 ebean:
   ddl:
