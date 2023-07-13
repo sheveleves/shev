@@ -1,9 +1,4 @@
-ebean:
-  ddl:
-    run: true
-    generate: true
-#  migration:
-#    run: true
+
     
     
 
@@ -19,3 +14,9 @@ datasource:
     password: ${PGPASSWORD}
     url: ${DATABASE_URL}
 
+ebean:
+  ddl:
+    run: true
+    generate: true
+#  migration:
+#    run: true
