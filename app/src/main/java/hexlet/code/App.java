@@ -44,7 +44,9 @@ public class App {
     };
 
     private static Handler bug = ctx -> {
-        String env = System.getenv("APP_ENV");
+//        String env = System.getenv("APP_ENV");
+        String env = System.getenv().toString();
+
         DatabaseConfig databaseConfig = new DatabaseConfig();
         databaseConfig.loadFromProperties();
 //        databaseConfig.setName("db");
