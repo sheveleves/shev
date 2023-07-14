@@ -3,6 +3,7 @@ package hexlet.code;
 
 import hexlet.code.domain.Url;
 import hexlet.code.domain.query.QUrl;
+import io.ebean.config.DatabaseConfig;
 import io.javalin.Javalin;
 import io.javalin.http.Handler;
 
@@ -44,6 +45,13 @@ public class App {
 
     private static Handler bug = ctx -> {
         String env = System.getenv("APP_ENV");
+        DatabaseConfig databaseConfig = new DatabaseConfig();
+        databaseConfig.loadFromProperties();
+//        databaseConfig.setName("db");
+        System.out.println(databaseConfig.getName());
+        System.out.println(databaseConfig.getProperties());
+        System.out.println("loaded postgres driver: " + org.postgresql.Driver.getVersion());
+
         ctx.result("HELLO     " + env);
     };
 }
