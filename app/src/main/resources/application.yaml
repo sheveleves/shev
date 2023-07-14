@@ -13,7 +13,7 @@ datasource:
 #  production:
     username: ${PGUSER}
     password: ${PGPASSWORD}
-    url: ${DATABASE_URL}
+    url: jdbc:${DATABASE_URL}
 
 ebean:
   ddl:
