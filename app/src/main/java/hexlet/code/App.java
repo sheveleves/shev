@@ -8,6 +8,7 @@ import io.javalin.Javalin;
 import io.javalin.http.Handler;
 
 import java.util.List;
+import java.util.Map;
 
 
 public class App {
@@ -45,7 +46,7 @@ public class App {
 
     private static Handler bug = ctx -> {
 //        String env = System.getenv("APP_ENV");
-        String env = System.getenv().toString();
+
 
         DatabaseConfig databaseConfig = new DatabaseConfig();
         databaseConfig.loadFromProperties();
@@ -53,7 +54,11 @@ public class App {
         System.out.println(databaseConfig.getName());
         System.out.println(databaseConfig.getProperties());
         System.out.println("loaded postgres driver: " + org.postgresql.Driver.getVersion());
+        Map<String, String> getenv = System.getenv();
+        for (var env: getenv.entrySet()) {
+            System.out.println(env);
+        }
 
-        ctx.result("HELLO     " + env);
+        ctx.result("HELLO");
     };
 }
