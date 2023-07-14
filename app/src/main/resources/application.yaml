@@ -14,7 +14,7 @@ datasource:
     username: ${PGUSER}
     password: ${PGPASSWORD}
 #    url: jdbc:postgresql://${PGHOST}:${PGPORT}/${PGDATABASE}
-    url: ${DATABASE_URL}
+    url: jdbc:${DATABASE_URL}
 
 
 ebean:
