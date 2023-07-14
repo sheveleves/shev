@@ -12,7 +12,7 @@ datasource:
   production:
     username: ${PGUSER}
     password: ${PGPASSWORD}
-    url: jdbc:postgresql://${Postgres.PGHOST}:${Postgres.PGPORT}/${Postgres.PGDATABASE}
+    url: ${DATABASE_URL}
 
 ebean:
   ddl:
