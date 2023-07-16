@@ -16,8 +16,8 @@ datasource:
 
 
 ebean:
-#  ddl:
-#    run: true
-#    generate: true
-  migration:
+  ddl:
     run: true
+    generate: true
+#  migration:
+#    run: true
