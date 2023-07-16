@@ -13,7 +13,9 @@ datasource:
   production:
     username: ${PGUSER}
     password: ${PGPASSWORD}
-    url: jdbc:postgresql://${PGHOST}:${PGPORT}/${PGDATABASE}
+    url: ${PGHOST}:${PGPORT}/${PGDATABASE}
+
+#    url: jdbc:postgresql://${PGHOST}:${PGPORT}/${PGDATABASE}
 #    url: jdbc:${DATABASE_URL}
 
 
