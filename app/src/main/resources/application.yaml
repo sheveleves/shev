@@ -4,7 +4,6 @@
 
 
 datasource:
-#  db:
   default: ${APP_ENV}
   development:
     username: ""
@@ -13,15 +12,12 @@ datasource:
   production:
     username: ${PGUSER}
     password: ${PGPASSWORD}
-    url: jdbc:postgresql://containers-us-west-84.railway.app:6182/railway
-
-#    url: jdbc:postgresql://${PGHOST}:${PGPORT}/${PGDATABASE}
-#    url: jdbc:${DATABASE_URL}
+    url: jdbc:postgresql://${PGHOST}:${PGPORT}/${PGDATABASE}
 
 
 ebean:
-  ddl:
-    run: true
-    generate: true
-#  migration:
+#  ddl:
 #    run: true
+#    generate: true
+  migration:
+    run: true
