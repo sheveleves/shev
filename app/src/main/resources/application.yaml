@@ -13,7 +13,7 @@ datasource:
   production:
     username: ${PGUSER}
     password: ${PGPASSWORD}
-    url: ${PGHOST}:${PGPORT}/${PGDATABASE}
+    url: jdbc:postgresql://containers-us-west-84.railway.app:6182/railway
 
 #    url: jdbc:postgresql://${PGHOST}:${PGPORT}/${PGDATABASE}
 #    url: jdbc:${DATABASE_URL}
