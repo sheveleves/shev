@@ -1,64 +1,76 @@
 package hexlet.code;
 
 
-import hexlet.code.domain.Url;
-import hexlet.code.domain.query.QUrl;
-import io.ebean.config.DatabaseConfig;
+import hexlet.code.controllers.RootController;
+import hexlet.code.controllers.UrlController;
 import io.javalin.Javalin;
-import io.javalin.http.Handler;
+import nz.net.ultraq.thymeleaf.layoutdialect.LayoutDialect;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.extras.java8time.dialect.Java8TimeDialect;
+import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
+import io.javalin.rendering.template.JavalinThymeleaf;
 
-import java.util.List;
-import java.util.Map;
 
+import static io.javalin.apibuilder.ApiBuilder.path;
+import static io.javalin.apibuilder.ApiBuilder.post;
+import static io.javalin.apibuilder.ApiBuilder.get;
 
 public class App {
     private static int getPort() {
         String port = System.getenv().getOrDefault("PORT", "8000");
         return Integer.valueOf(port);
     }
+
+    private static void addRoutes(Javalin app) {
+        app.get("/", RootController.welcome);
+        app.routes(() -> {
+            path("urls", () -> {
+                path("{id}", () -> {
+                    get(UrlController.showUrl);
+                });
+                get(UrlController.showUrls);
+                post(UrlController.addUrl);
+            });
+        });
+
+    }
+
     public static Javalin getApp() {
         Javalin app = Javalin.create(config -> {
-            config.plugins.enableDevLogging(); })
-                .get("/", bug)
-                .get("/url/", see)
-                .post("/url/", create);
-        return app;
+            if (!isProduction()) {
+                config.plugins.enableDevLogging();
+            }
+            System.out.println(getMode());
+            JavalinThymeleaf.init(getTemplateEngine()); });
+        addRoutes(app);
 
+        app.before(ctx -> {
+            ctx.attribute("ctx", ctx);
+        });
+        return app;
     }
 
     public static void main(String[] args) {
         Javalin app = getApp();
         app.start(getPort());
     }
-    //for check up and debug temporarily
-    private static Handler create = ctx -> {
-        String urlParam = ctx.formParam("urlParam");
-        Url url = new Url(urlParam);
-        url.save();
-    };
 
-    private static Handler see = ctx -> {
-        List<Url> urls = new QUrl()
-//                .id.equalTo(1L)
-                .findList();
-        ctx.result(urls.toString());
-    };
+    private static TemplateEngine getTemplateEngine() {
+        TemplateEngine templateEngine = new TemplateEngine();
+        templateEngine.addDialect(new LayoutDialect());
+        templateEngine.addDialect(new Java8TimeDialect());
+        ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
+        templateResolver.setPrefix("/templates/");
+        templateResolver.setCharacterEncoding("UTF-8");
+        templateEngine.addTemplateResolver(templateResolver);
+        return templateEngine;
+    }
 
-    private static Handler bug = ctx -> {
-//        String env = System.getenv("APP_ENV");
+    public static String getMode() {
+        return System.getenv().getOrDefault("APP_ENV", "development");
+    }
 
-
-        DatabaseConfig databaseConfig = new DatabaseConfig();
-        databaseConfig.loadFromProperties();
-//        databaseConfig.setName("db");
-        System.out.println(databaseConfig.getName());
-        System.out.println(databaseConfig.getProperties());
-        System.out.println("loaded postgres driver: " + org.postgresql.Driver.getVersion());
-        Map<String, String> getenv = System.getenv();
-        for (var env: getenv.entrySet()) {
-            System.out.println(env);
-        }
-
-        ctx.result("HELLO");
-    };
+    private static boolean isProduction() {
+        return getMode().equals("production");
+    }
 }
