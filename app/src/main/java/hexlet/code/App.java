@@ -27,6 +27,7 @@ public class App {
             path("urls", () -> {
                 path("{id}", () -> {
                     get(UrlController.showUrl);
+                    post("checks", UrlController.checkUrl);
                 });
                 get(UrlController.showUrls);
                 post(UrlController.addUrl);
@@ -40,7 +41,6 @@ public class App {
             if (!isProduction()) {
                 config.plugins.enableDevLogging();
             }
-            System.out.println(getMode());
             JavalinThymeleaf.init(getTemplateEngine()); });
         addRoutes(app);
 
