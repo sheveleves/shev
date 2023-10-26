@@ -7,6 +7,7 @@ import hexlet.code.domain.query.QUrlCheck;
 import io.ebean.DB;
 import io.ebean.Database;
 import io.ebean.Transaction;
+import io.ebean.annotation.Transactional;
 import kong.unirest.HttpResponse;
 import kong.unirest.Unirest;
 
@@ -16,6 +17,7 @@ import io.javalin.Javalin;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,6 +40,7 @@ class AppTest {
     private static String baseUrl;
     private static Database database;
     private static Transaction transaction;
+    int i = 0;
 
     @BeforeAll
     public static void beforeAll() throws IOException {
@@ -51,6 +54,16 @@ class AppTest {
         MockResponse mockResponse = new MockResponse().setBody(readFixture("testPage.html"));
         mockWebServer.enqueue(mockResponse);
         mockWebServer.start();
+//        database.script().run("/truncate.sql");
+//        database.script().run("/seed.sql");
+        System.out.println("beforeAll ------------- start");
+
+        List<Url> list = new QUrl()
+                .findList();
+
+        System.out.println(list);
+        System.out.println("beforeAll ------------- end");
+
     }
 
     @AfterAll
@@ -61,8 +74,40 @@ class AppTest {
 
     @BeforeEach
     void beforeEach() {
-        database.script().run("/truncate.sql");
-        database.script().run("/seed.sql");
+
+//        database.script().run("/truncate.sql");
+//        database.script().run("/seed.sql");
+        System.out.println("beforeEach ------------- start");
+
+        List<Url> list = new QUrl()
+                .findList();
+
+        System.out.println(i);
+        System.out.println(list);
+
+        transaction = database.beginTransaction();
+        System.out.println("trans" + i);
+        list = new QUrl().findList();
+        System.out.println(list);
+        System.out.println("beforeEach ------------- end");
+
+
+    }
+
+    @AfterEach
+    void afterEach() {
+        System.out.println("afterEach ------------- start");
+
+        System.out.println("roll" + i);
+        List<Url> list = new QUrl().findList();
+        System.out.println(list);
+        transaction.rollback();
+        i++;
+        System.out.println(i);
+        list = new QUrl().findList();
+        System.out.println(list);
+        System.out.println("afterEach ------------- end");
+
     }
 
     @Test
@@ -83,6 +128,10 @@ class AppTest {
 
     @Test
     void testShowUrl() {
+        System.out.println("testShowUrl---start");
+        List<Url> list = new QUrl()
+                .findList();
+        System.out.println(list);
         Url url = new QUrl()
                 .name.equalTo(TEST_NAME_1)
                 .findOne();
@@ -96,10 +145,23 @@ class AppTest {
         assertThat(response.getBody()).contains(TEST_NAME_1);
         assertThat(response.getBody()).doesNotContain(TEST_NAME_2);
         assertThat(response.getBody()).contains(urlCheck.getDescription(), urlCheck.getTitle(), urlCheck.getH1());
+        list = new QUrl()
+                .findList();
+        System.out.println(list);
+        System.out.println("testShowUrl---end");
+
     }
 
     @Test
+//    @Transactional
     void testAddCorrectUrl() {
+
+        System.out.println("testAddCorrectUrl---start");
+
+        List<Url> list1 = new QUrl()
+                .findList();
+        System.out.println(list1);
+
         String url = "https://google.com";
         List<Url> list = new QUrl()
                 .findList();
@@ -113,51 +175,81 @@ class AppTest {
         assertThat(response.getBody()).contains(TEST_NAME_1, TEST_NAME_2);
         assertThat(response.getBody()).doesNotContain(url);
 
-        HttpResponse postResponse = Unirest.post(baseUrl + "/urls")
-                .field("url", url)
-                .asEmpty();
 
-        assertThat(postResponse.getStatus()).isEqualTo(302);
 
-        list = new QUrl()
+
+
+        try (Transaction transaction1 = DB.beginTransaction()) {
+            HttpResponse postResponse = Unirest.post(baseUrl + "/urls")
+                    .field("url", url)
+                    .asEmpty();
+
+            assertThat(postResponse.getStatus()).isEqualTo(302);
+
+            list = new QUrl()
+                    .findList();
+            assertThat(list.size()).isEqualTo(3);
+
+            response = Unirest.get(baseUrl + "/urls").asString();
+            assertThat(response.getBody()).contains(TEST_NAME_1, TEST_NAME_2, url);
+            assertThat(response.getBody()).contains("Страница успешно добавлена");
+
+            urlEntity = new QUrl()
+                    .name.equalTo(url)
+                    .findOne();
+            Assertions.assertNotNull(urlEntity);
+
+            postResponse = Unirest.post(baseUrl + "/urls")
+                    .field("url", url)
+                    .asEmpty();
+
+            list = new QUrl()
+                    .findList();
+            assertThat(list.size()).isEqualTo(3);
+
+            response = Unirest.get(baseUrl + "/urls").asString();
+            assertThat(response.getBody()).contains("Страница уже существует");
+            list1 = new QUrl()
+                    .findList();
+            System.out.println(list1);
+            System.out.println("testAddCorrectUrl---try");
+            transaction1.rollback();
+        }
+        list1 = new QUrl()
                 .findList();
-        assertThat(list.size()).isEqualTo(3);
+        System.out.println(list1);
+        System.out.println("testAddCorrectUrl---end");
 
-        response = Unirest.get(baseUrl + "/urls").asString();
-        assertThat(response.getBody()).contains(TEST_NAME_1, TEST_NAME_2, url);
-        assertThat(response.getBody()).contains("Страница успешно добавлена");
-
-        urlEntity = new QUrl()
-                .name.equalTo(url)
-                .findOne();
-        Assertions.assertNotNull(urlEntity);
-
-        postResponse = Unirest.post(baseUrl + "/urls")
-                .field("url", url)
-                .asEmpty();
-
-        list = new QUrl()
-                .findList();
-        assertThat(list.size()).isEqualTo(3);
-
-        response = Unirest.get(baseUrl + "/urls").asString();
-        assertThat(response.getBody()).contains("Страница уже существует");
     }
 
     @Test
+    @Transactional
     void testIncorrectUrl() {
+        System.out.println("testIncorrectUrl---start");
+
+        List<Url> list = new QUrl()
+                .findList();
+        System.out.println(list);
+
+
         String url = "google.com";
         HttpResponse postResponse = Unirest.post(baseUrl + "/urls")
                 .field("url", url)
                 .asEmpty();
 
         assertThat(postResponse.getStatus()).isEqualTo(302);
-        List<Url> list = new QUrl()
+        list = new QUrl()
                 .findList();
         assertThat(list.size()).isEqualTo(2);
 
         HttpResponse<String> response = Unirest.get(baseUrl).asString();
         assertThat(response.getBody()).contains("Некорректный URL", TITLE_PAGE);
+
+        list = new QUrl()
+                .findList();
+        System.out.println(list);
+        System.out.println("testIncorrectUrl---end");
+
     }
 
     @Test
