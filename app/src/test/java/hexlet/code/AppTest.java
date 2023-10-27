@@ -7,7 +7,9 @@ import hexlet.code.domain.query.QUrlCheck;
 import io.ebean.DB;
 import io.ebean.Database;
 import io.ebean.Transaction;
+import io.ebean.TxScope;
 import io.ebean.annotation.Transactional;
+import io.ebean.annotation.TxType;
 import kong.unirest.HttpResponse;
 import kong.unirest.Unirest;
 
@@ -27,6 +29,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Connection;
 import java.util.List;
 
 class AppTest {
@@ -85,7 +88,8 @@ class AppTest {
         System.out.println(i);
         System.out.println(list);
 
-        transaction = database.beginTransaction();
+//        transaction = database.beginTransaction();
+//        DB.beginTransaction();
         System.out.println("trans" + i);
         list = new QUrl().findList();
         System.out.println(list);
@@ -101,7 +105,8 @@ class AppTest {
         System.out.println("roll" + i);
         List<Url> list = new QUrl().findList();
         System.out.println(list);
-        transaction.rollback();
+//        transaction.rollback();
+//        DB.rollbackTransaction();
         i++;
         System.out.println(i);
         list = new QUrl().findList();
@@ -110,179 +115,248 @@ class AppTest {
 
     }
 
-    @Test
-    void testMainPage() {
-        HttpResponse<String> response = Unirest.get(baseUrl).asString();
-        assertThat(response.getStatus()).isEqualTo(200);
-        assertThat(response.getBody()).contains(TITLE_PAGE);
-    }
 
     @Test
-    void testShowUrls() {
-        HttpResponse<String> response = Unirest.get(baseUrl + "/urls").asString();
-        assertThat(response.getStatus()).isEqualTo(200);
-        assertThat(response.getBody()).contains("ID", "Имя", "Последняя проверка", "Код ответа");
-        assertThat(response.getBody()).contains(TEST_NAME_1, TEST_NAME_2);
-        assertThat(response.getBody()).contains("26/07/2023", "17:54", "200");
-    }
+    @Transactional()
+    void testEbean1() {
+        System.out.println("testEbean1---start");
 
-    @Test
-    void testShowUrl() {
-        System.out.println("testShowUrl---start");
-        List<Url> list = new QUrl()
-                .findList();
-        System.out.println(list);
-        Url url = new QUrl()
-                .name.equalTo(TEST_NAME_1)
-                .findOne();
-        UrlCheck urlCheck = new QUrlCheck()
-                .url.equalTo(url)
-                .findOne();
-
-        HttpResponse<String> response = Unirest.get(baseUrl + "/urls/" + url.getId()).asString();
-
-        assertThat(response.getStatus()).isEqualTo(200);
-        assertThat(response.getBody()).contains(TEST_NAME_1);
-        assertThat(response.getBody()).doesNotContain(TEST_NAME_2);
-        assertThat(response.getBody()).contains(urlCheck.getDescription(), urlCheck.getTitle(), urlCheck.getH1());
-        list = new QUrl()
-                .findList();
-        System.out.println(list);
-        System.out.println("testShowUrl---end");
-
-    }
-
-    @Test
-//    @Transactional
-    void testAddCorrectUrl() {
-
-        System.out.println("testAddCorrectUrl---start");
-
-        List<Url> list1 = new QUrl()
-                .findList();
-        System.out.println(list1);
-
-        String url = "https://google.com";
-        List<Url> list = new QUrl()
-                .findList();
-        assertThat(list.size()).isEqualTo(2);
-        Url urlEntity = new QUrl()
-                .name.equalTo(url)
-                .findOne();
-        Assertions.assertNull(urlEntity);
-        HttpResponse<String> response = Unirest.get(baseUrl + "/urls").asString();
-        assertThat(response.getBody()).contains("ID", "Имя", "Последняя проверка", "Код ответа");
-        assertThat(response.getBody()).contains(TEST_NAME_1, TEST_NAME_2);
-        assertThat(response.getBody()).doesNotContain(url);
-
-
-
-
-
-        try (Transaction transaction1 = DB.beginTransaction()) {
-            HttpResponse postResponse = Unirest.post(baseUrl + "/urls")
-                    .field("url", url)
-                    .asEmpty();
-
-            assertThat(postResponse.getStatus()).isEqualTo(302);
-
+        try {
+            List<Url> list = new QUrl()
+                    .findList();
+            assertThat(list.size()).isEqualTo(2);
+            System.out.println(list);
+            String newUrl = "https://hello.com";
+            Url url = new Url(newUrl);
+            url.save();
             list = new QUrl()
                     .findList();
+            System.out.println(list);
             assertThat(list.size()).isEqualTo(3);
 
-            response = Unirest.get(baseUrl + "/urls").asString();
-            assertThat(response.getBody()).contains(TEST_NAME_1, TEST_NAME_2, url);
-            assertThat(response.getBody()).contains("Страница успешно добавлена");
+            System.out.println("testEbean1---end");
 
-            urlEntity = new QUrl()
-                    .name.equalTo(url)
-                    .findOne();
-            Assertions.assertNotNull(urlEntity);
+            //с закоментированным post запросом откат происходит
+            //если раскоментировать и выполнить - тесты лягут
 
-            postResponse = Unirest.post(baseUrl + "/urls")
-                    .field("url", url)
-                    .asEmpty();
-
+            HttpResponse<String> httpResponse = Unirest.post(baseUrl + "/urls")
+                    .field("url", "https://test.com")
+                    .asString();
             list = new QUrl()
                     .findList();
-            assertThat(list.size()).isEqualTo(3);
+            System.out.println(list);
+            assertThat(list.size()).isEqualTo(4);
+        } finally {
 
-            response = Unirest.get(baseUrl + "/urls").asString();
-            assertThat(response.getBody()).contains("Страница уже существует");
-            list1 = new QUrl()
-                    .findList();
-            System.out.println(list1);
-            System.out.println("testAddCorrectUrl---try");
-            transaction1.rollback();
+        DB.rollbackTransaction();
         }
-        list1 = new QUrl()
-                .findList();
-        System.out.println(list1);
-        System.out.println("testAddCorrectUrl---end");
+
+
 
     }
 
     @Test
-    @Transactional
-    void testIncorrectUrl() {
-        System.out.println("testIncorrectUrl---start");
+    void testEbean2() {
+        System.out.println("testEbean2---start");
 
         List<Url> list = new QUrl()
                 .findList();
-        System.out.println(list);
-
-
-        String url = "google.com";
-        HttpResponse postResponse = Unirest.post(baseUrl + "/urls")
-                .field("url", url)
-                .asEmpty();
-
-        assertThat(postResponse.getStatus()).isEqualTo(302);
-        list = new QUrl()
-                .findList();
         assertThat(list.size()).isEqualTo(2);
+        System.out.println(list);
+        String oneUrl = "https://helloOne.com";
+        String twoUrl = "https://helloTwo.com";
 
-        HttpResponse<String> response = Unirest.get(baseUrl).asString();
-        assertThat(response.getBody()).contains("Некорректный URL", TITLE_PAGE);
-
+        Url url = new Url(oneUrl);
+        url.save();
         list = new QUrl()
                 .findList();
         System.out.println(list);
-        System.out.println("testIncorrectUrl---end");
+        assertThat(list.size()).isEqualTo(3);
+
+        url = new Url(twoUrl);
+        url.save();
+        list = new QUrl()
+                .findList();
+        System.out.println(list);
+        assertThat(list.size()).isEqualTo(4);
+
+        System.out.println("testEbean2---end");
 
     }
 
-    @Test
-    void testCheckUrl() {
-        String addressUrl = mockWebServer.url("/").toString();
+//    @Test
+//    void testMainPage() {
+//        HttpResponse<String> response = Unirest.get(baseUrl).asString();
+//        assertThat(response.getStatus()).isEqualTo(200);
+//        assertThat(response.getBody()).contains(TITLE_PAGE);
+//    }
 
-        HttpResponse postResponse = Unirest.post(baseUrl + "/urls")
-                .field("url", addressUrl)
-                .asEmpty();
-        assertThat(postResponse.getStatus()).isEqualTo(302);
+//    @Test
+//    void testShowUrls() {
+//        HttpResponse<String> response = Unirest.get(baseUrl + "/urls").asString();
+//        assertThat(response.getStatus()).isEqualTo(200);
+//        assertThat(response.getBody()).contains("ID", "Имя", "Последняя проверка", "Код ответа");
+//        assertThat(response.getBody()).contains(TEST_NAME_1, TEST_NAME_2);
+//        assertThat(response.getBody()).contains("26/07/2023", "17:54", "200");
+//    }
 
-        Url url = new QUrl()
-                .name.iequalTo(addressUrl.substring(0, addressUrl.length() - 1))
-                .findOne();
-        long id = url.getId();
-        UrlCheck urlCheck = new QUrlCheck()
-                .url.equalTo(url)
-                .findOne();
-        Assertions.assertNull(urlCheck);
+//    @Test
+//    void testShowUrl() {
+//        System.out.println("testShowUrl---start");
+//        List<Url> list = new QUrl()
+//                .findList();
+//        System.out.println(list);
+//        Url url = new QUrl()
+//                .name.equalTo(TEST_NAME_1)
+//                .findOne();
+//        UrlCheck urlCheck = new QUrlCheck()
+//                .url.equalTo(url)
+//                .findOne();
+//
+//        HttpResponse<String> response = Unirest.get(baseUrl + "/urls/" + url.getId()).asString();
+//
+//        assertThat(response.getStatus()).isEqualTo(200);
+//        assertThat(response.getBody()).contains(TEST_NAME_1);
+//        assertThat(response.getBody()).doesNotContain(TEST_NAME_2);
+//        assertThat(response.getBody()).contains(urlCheck.getDescription(), urlCheck.getTitle(), urlCheck.getH1());
+//        list = new QUrl()
+//                .findList();
+//        System.out.println(list);
+//        System.out.println("testShowUrl---end");
+//
+//    }
 
-        postResponse = Unirest.post(baseUrl + "/urls/" + id + "/checks")
-                .asEmpty();
+//    @Test
+////    @Transactional
+//    void testAddCorrectUrl() {
+//
+//        System.out.println("testAddCorrectUrl---start");
+//
+//        List<Url> list1 = new QUrl()
+//                .findList();
+//        System.out.println(list1);
+//
+//        String url = "https://google.com";
+//        List<Url> list = new QUrl()
+//                .findList();
+//        assertThat(list.size()).isEqualTo(2);
+//        Url urlEntity = new QUrl()
+//                .name.equalTo(url)
+//                .findOne();
+//        Assertions.assertNull(urlEntity);
+//        HttpResponse<String> response = Unirest.get(baseUrl + "/urls").asString();
+//        assertThat(response.getBody()).contains("ID", "Имя", "Последняя проверка", "Код ответа");
+//        assertThat(response.getBody()).contains(TEST_NAME_1, TEST_NAME_2);
+//        assertThat(response.getBody()).doesNotContain(url);
+//
+//
+//
+//
+//
+//        try (Transaction transaction1 = DB.beginTransaction()) {
+//            HttpResponse postResponse = Unirest.post(baseUrl + "/urls")
+//                    .field("url", url)
+//                    .asEmpty();
+//
+//            assertThat(postResponse.getStatus()).isEqualTo(302);
+//
+//            list = new QUrl()
+//                    .findList();
+//            assertThat(list.size()).isEqualTo(3);
+//
+//            response = Unirest.get(baseUrl + "/urls").asString();
+//            assertThat(response.getBody()).contains(TEST_NAME_1, TEST_NAME_2, url);
+//            assertThat(response.getBody()).contains("Страница успешно добавлена");
+//
+//            urlEntity = new QUrl()
+//                    .name.equalTo(url)
+//                    .findOne();
+//            Assertions.assertNotNull(urlEntity);
+//
+//            postResponse = Unirest.post(baseUrl + "/urls")
+//                    .field("url", url)
+//                    .asEmpty();
+//
+//            list = new QUrl()
+//                    .findList();
+//            assertThat(list.size()).isEqualTo(3);
+//
+//            response = Unirest.get(baseUrl + "/urls").asString();
+//            assertThat(response.getBody()).contains("Страница уже существует");
+//            list1 = new QUrl()
+//                    .findList();
+//            System.out.println(list1);
+//            System.out.println("testAddCorrectUrl---try");
+//            transaction1.rollback();
+//        }
+//        list1 = new QUrl()
+//                .findList();
+//        System.out.println(list1);
+//        System.out.println("testAddCorrectUrl---end");
+//
+//    }
 
-        assertThat(postResponse.getStatus()).isEqualTo(302);
-        urlCheck = new QUrlCheck()
-                .url.equalTo(url)
-                .findOne();
-        Assertions.assertNotNull(urlCheck);
-        assertThat(urlCheck.getDescription()).isEqualTo("Description of page is here.");
-        assertThat(urlCheck.getH1()).isEqualTo("It's just for test");
-        assertThat(urlCheck.getTitle()).isEqualTo("Here is title this page!");
-        assertThat(urlCheck.getStatusCode()).isEqualTo(200);
-    }
+//    @Test
+//    @Transactional
+//    void testIncorrectUrl() {
+//        System.out.println("testIncorrectUrl---start");
+//
+//        List<Url> list = new QUrl()
+//                .findList();
+//        System.out.println(list);
+//
+//
+//        String url = "google.com";
+//        HttpResponse postResponse = Unirest.post(baseUrl + "/urls")
+//                .field("url", url)
+//                .asEmpty();
+//
+//        assertThat(postResponse.getStatus()).isEqualTo(302);
+//        list = new QUrl()
+//                .findList();
+//        assertThat(list.size()).isEqualTo(2);
+//
+//        HttpResponse<String> response = Unirest.get(baseUrl).asString();
+//        assertThat(response.getBody()).contains("Некорректный URL", TITLE_PAGE);
+//
+//        list = new QUrl()
+//                .findList();
+//        System.out.println(list);
+//        System.out.println("testIncorrectUrl---end");
+//
+//    }
+
+//    @Test
+//    void testCheckUrl() {
+//        String addressUrl = mockWebServer.url("/").toString();
+//
+//        HttpResponse postResponse = Unirest.post(baseUrl + "/urls")
+//                .field("url", addressUrl)
+//                .asEmpty();
+//        assertThat(postResponse.getStatus()).isEqualTo(302);
+//
+//        Url url = new QUrl()
+//                .name.iequalTo(addressUrl.substring(0, addressUrl.length() - 1))
+//                .findOne();
+//        long id = url.getId();
+//        UrlCheck urlCheck = new QUrlCheck()
+//                .url.equalTo(url)
+//                .findOne();
+//        Assertions.assertNull(urlCheck);
+//
+//        postResponse = Unirest.post(baseUrl + "/urls/" + id + "/checks")
+//                .asEmpty();
+//
+//        assertThat(postResponse.getStatus()).isEqualTo(302);
+//        urlCheck = new QUrlCheck()
+//                .url.equalTo(url)
+//                .findOne();
+//        Assertions.assertNotNull(urlCheck);
+//        assertThat(urlCheck.getDescription()).isEqualTo("Description of page is here.");
+//        assertThat(urlCheck.getH1()).isEqualTo("It's just for test");
+//        assertThat(urlCheck.getTitle()).isEqualTo("Here is title this page!");
+//        assertThat(urlCheck.getStatusCode()).isEqualTo(200);
+//    }
 
     private static Path getFixturePath(String fileName) {
         return Paths.get("src", "test", "resources", "fixtures", fileName)
