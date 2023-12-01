@@ -74,10 +74,10 @@ public class TasksController {
         taskMapper.update(taskUpdateDTO, task);
 
         //с ЗАкоменченной 26 стр в TaskMapper @Mapping(target = "assignee.id", source = "assigneeId")
-        Long assigneeId = taskUpdateDTO.getAssigneeId();//либо эта строка
+//        Long assigneeId = taskUpdateDTO.getAssigneeId();//либо эта строка
 
         //с РАСкоменченной 26 стр в TaskMapper @Mapping(target = "assignee.id", source = "assigneeId")
-//        long assigneeId = task.getAssignee().getId();//либо эта строка
+        long assigneeId = task.getAssignee().getId();//либо эта строка
         User user = userRepository.findById(assigneeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Not found assignee with id = " + assigneeId));
         task.setAssignee(user);
