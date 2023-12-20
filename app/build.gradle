@@ -1,0 +1,91 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'checkstyle'
+    id 'jacoco'
+    id 'io.ebean' version '13.17.4'
+    id 'com.adarshr.test-logger' version '3.2.0'
+}
+
+application {
+    mainClass = 'hexlet.code.App'
+}
+
+jacocoTestReport {
+    dependsOn test
+}
+
+jacocoTestReport {
+    reports {
+        xml.required = true
+        csv.required = false
+        html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
+    }
+}
+
+group = 'hexlet.code'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'io.javalin:javalin:5.6.2'
+    implementation("io.javalin:javalin-bundle:5.6.2")
+    implementation 'io.javalin:javalin-rendering:5.6.2'
+//    implementation 'io.javalin:javalin:5.6.1'
+//    implementation 'io.javalin:javalin-rendering:5.6.0'
+
+    implementation 'org.slf4j:slf4j-simple:2.0.7'
+
+
+    implementation 'io.ebean:ebean:13.15.0'
+    implementation 'io.ebean:ebean-querybean:12.16.1'
+    implementation 'io.ebean:ebean-annotation:8.3'
+    implementation 'io.ebean:ebean-ddl-generator:13.15.0'
+    implementation 'io.ebean:ebean-migration:13.7.0'
+    annotationProcessor 'io.ebean:querybean-generator:13.15.0'
+
+    implementation 'com.h2database:h2:2.1.214'
+    implementation 'org.postgresql:postgresql:42.5.4'
+
+    implementation 'org.glassfish.jaxb:jaxb-runtime:2.3.5'
+    implementation 'javax.activation:activation:1.1.1'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
+    testImplementation 'io.ebean:ebean-test:13.15.0'
+    implementation 'com.konghq:unirest-java:3.14.2'
+
+    implementation 'org.thymeleaf:thymeleaf:3.1.1.RELEASE'
+    implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect:3.2.0'
+    implementation 'org.thymeleaf.extras:thymeleaf-extras-java8time:3.0.4.RELEASE'
+    implementation 'org.webjars:bootstrap:5.2.3'
+
+    testImplementation 'com.squareup.okhttp3:mockwebserver:4.10.0'
+
+    implementation 'org.jsoup:jsoup:1.16.1'
+}
+
+test {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
+compileJava {
+    options.release = 20
+    options.encoding = 'UTF-8'
+}
+
+task stage(dependsOn: ['clean', 'installDist'])
+installDist.mustRunAfter clean
+
+task generateMigration(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'hexlet.code.MigrationGenerator'
+}
+
+testlogger {
+    showStandardStreams true
+}
